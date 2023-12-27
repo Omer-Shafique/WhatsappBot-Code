@@ -1,0 +1,93 @@
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from chromedriver_autoinstaller import install
+import time
+import pandas as pd
+import os
+
+# Ensure the appropriate version of ChromeDriver is installed
+install()
+# Chrome options
+
+options = webdriver.ChromeOptions()
+user_data_dir = "C:/Users/" + os.getlogin() + "/AppData/Local/Google/Chrome/User Data"
+options.add_argument(f"user-data-dir={user_data_dir}")
+#options.add_argument('profile-directory=Profile 1')
+options.add_argument('profile-directory=NewProfile')
+
+# Initialize the WebDriver
+driver = webdriver.Chrome(options=options)
+
+# web driver page load delay
+wait = WebDriverWait(driver, 40)
+
+# excel sheet data
+folder_path = "C:/Users/Developer/Desktop/whatsapp-bot(EXCEL)"
+excel_read = pd.read_excel(os.getcwd().replace('/', '//' )+"//excel-workbook.xlsx", sheet_name='Sheet1')
+numbers = excel_read['Number'].tolist()
+message_1 = excel_read['Message-1'].tolist()
+message_2 = excel_read['Message-2'].tolist()
+message_3 = excel_read['Message-3'].tolist()
+message_4 = excel_read['Message-4'].tolist()
+message_5 = excel_read['Message-5'].tolist()
+attachments = excel_read['Attachment'].tolist()
+count = 0
+
+# automation looping
+for number in numbers:
+    # try:
+        
+        driver.get("https://web.whatsapp.com/send?phone=" + str(number) + "&text= ") 
+        
+        #type + send message in whatsapp 
+        message_box_path = '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]'
+        message_box = wait.until(EC.presence_of_element_located((By.XPATH,message_box_path)))
+        result_box = driver.find_element(By.XPATH,message_box_path).is_enabled()
+
+        # first message 
+        if(str(message_1[count]) != str('nan')):
+            message_box.send_keys(message_1[count] + Keys.ENTER)
+            time.sleep(1)
+
+        # second message
+        if(str(message_2[count]) != str('nan')):
+            message_box.send_keys(message_2[count] + Keys.ENTER)
+            time.sleep(1)
+
+        # third message
+        if(str(message_3[count]) != str('nan')):
+            message_box.send_keys(message_3[count] + Keys.ENTER)
+            time.sleep(1)
+        
+        # fourth message
+        if(str(message_4[count]) != str('nan')):
+            message_box.send_keys(message_4[count] + Keys.ENTER)
+            time.sleep(1)
+
+        # fifth message
+        if(str(message_5[count]) != str('nan')):
+            message_box.send_keys(message_5[count] + Keys.ENTER)
+            time.sleep(1)
+
+        # click attachemnt icon 
+        if(str(attachments[count]) != str('nan')):
+            try:
+                attachment_path = '/html/body/div[1]/div/div/div[4]/div/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div'
+                attachment = wait.until(EC.presence_of_element_located((By.XPATH, attachment_path)))
+                attachment.click()
+
+                image_icon_path = '//input[@accept="image/*,video/mp4,video/3gpp,video/quicktime"]'
+                image_icon = wait.until(EC.presence_of_element_located((By.XPATH, image_icon_path)))
+                image_icon.send_keys(os.path.abspath(attachments[count]))
+                image_icon.send_keys(Keys.RETURN)
+
+                wait.until(EC.invisibility_of_element_located((By.XPATH, image_icon_path)))
+
+                sent_icon_path = '//span[@data-testid="send"][@data-icon="send"]'
+                sent_icon = wait.until(EC.presence_of_element_located((By.XPATH, sent_icon_path)))
+                sent_icon.click()
+
+                print("Attachment with caption sent to " + str(number))
